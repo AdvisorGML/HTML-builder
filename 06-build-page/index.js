@@ -12,7 +12,9 @@ async function MakeIndex(from, to) {
     let component = await fsPromises.readFile(path.join(from, 'components', `${teg.slice(2, -2)}.html`), 'utf-8');
     template = template.replace(teg, component);
   }
-  fs.writeFile(path.join(to, 'index.html'), template, (err) => { if (err) throw err; });
+  fs.writeFile(path.join(to, 'index.html'), template, (err) => {
+    if (err) throw err;
+  });
 }
 
 async function ListCSS(dir) {
@@ -31,14 +33,15 @@ async function ListCSS(dir) {
 }
 
 async function BundleCSS(from, to) {
-
   const ResultCSS = path.join(to, 'style.css');
 
   fs.createWriteStream(ResultCSS, 'utf-8');
 
   for (const item of await ListCSS(from)) {
     let style = await fsPromises.readFile(path.join(from, item), 'utf-8');
-    fs.appendFile(ResultCSS, `${style}\n`, (err) => { if (err) throw err; });
+    fs.appendFile(ResultCSS, `${style}\n`, (err) => {
+      if (err) throw err;
+    });
   }
 }
 
@@ -47,24 +50,8 @@ async function ListDir(dir) {
   return files;
 }
 
-// async function EmptyDir(from) {
-//   for (const item of await ListDir(from)) {
-//     if (item.isFile()) {
-//       fsPromises.unlink(path.join(from, item.name));
-//     } else {
-//       await EmptyDir(path.join(from, item.name));
-//     }
-//   }
-// }
-
 async function EmptyDir(from) {
   const FileList = await ListDir(from);
-
-  if (FileList.length === 0) {
-    console.log(`EMPTY: ${from}`);
-    fs.rmdir(from, (err) => { if (err) throw err; });
-  }
-
   for (const item of FileList) {
     if (item.isFile()) {
       fsPromises.unlink(path.join(from, item.name));
@@ -74,25 +61,22 @@ async function EmptyDir(from) {
   }
 }
 
-
 async function RemoveDir(from) {
   const FileList = await ListDir(from);
   if (FileList.length === 0) {
-    console.log(`EMPTY: ${from}`);
+    fs.rmdir(from, (err) => {
+      if (err) throw err;
+    });
+  } else {
+    for (const item of FileList) {
+      RemoveDir(path.join(from, item.name));
+    }
   }
 }
 async function CopyDir(from, to) {
-  console.log(from);
-  console.log(to + '\n');
   fsPromises.mkdir(to, { recursive: true });
-
   for (const item of await ListDir(from)) {
     if (item.isFile()) {
-      console.clear();
-      console.log(from);
-      console.log(item.name);
-      console.log(path.join(from, item.name));
-      console.log(path.join(to, item.name));
       fsPromises.copyFile(path.join(from, item.name), path.join(to, item.name));
     } else {
       CopyDir(path.join(from, item.name), path.join(to, item.name));
@@ -109,19 +93,9 @@ async function CopyDir(from, to) {
 
   await fsPromises.mkdir(ProjectDir, { recursive: true });
   await fsPromises.mkdir(AssetsDir, { recursive: true });
-
   MakeIndex(BaseDir, ProjectDir);
-
   BundleCSS(CssDir, ProjectDir);
-
-
-  // await RemoveDir(AssetsDir);
-
   await EmptyDir(AssetsDir);
-
-
-
-  // await CopyDir(BaseAssetsDir, AssetsDir);
-
-  // console.log(BaseAssetsDir, AssetsDir);
+  await RemoveDir(AssetsDir);
+  await CopyDir(BaseAssetsDir, AssetsDir);
 })();
