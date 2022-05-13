@@ -1,22 +1,22 @@
 console.clear();
 const path = require('path');
-const fs = require('fs').promises;
+const fsPromises = require('fs').promises;
 
 async function listDir(dir) {
-  const files = await fs.readdir(dir);
+  const files = await fsPromises.readdir(dir);
   return files;
 }
 
 async function CopyDir(from, to) {
 
-  fs.mkdir(to, { recursive: true });
+  fsPromises.mkdir(to, { recursive: true });
 
   for (const item of await listDir(to)) {
-    fs.unlink(path.join(to, item));
+    fsPromises.unlink(path.join(to, item));
   }
 
   for (const item of await listDir(from)) {
-    fs.copyFile(path.join(from, item), path.join(to, item));
+    fsPromises.copyFile(path.join(from, item), path.join(to, item));
   }
 }
 
