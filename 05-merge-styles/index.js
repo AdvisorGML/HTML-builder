@@ -1,15 +1,15 @@
 console.clear();
 const path = require('path');
-const fsPromises = require('fs').promises;
+const fsP = require('fs').promises;
 const fs = require('fs');
 
 async function listCSS(dir) {
   let files = [];
-  const list = await fsPromises.readdir(dir);
+  const list = await fsP.readdir(dir);
   for (const item of list) {
     let file = path.join(dir, item);
     if (path.extname(file) === '.css') {
-      const stats = await fsPromises.stat(file);
+      const stats = await fsP.stat(file);
       if (stats.isFile()) {
         files.push(item);
       }

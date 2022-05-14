@@ -12,13 +12,13 @@ fs.createWriteStream(file, 'utf-8');
 
 rl.on('line', (line) => {
   if (line === 'exit') {
-    console.log('Good buy!!!');
+    console.log('Good bye!!!');
     process.exit(0);
   }
-  fs.appendFile(file, `${line}\n`, (error) => { if (error) throw error; });
+  fs.appendFile(file, `${line}\n`, (err) => { if (err) throw err; });
 });
 
 process.on('SIGINT', () => {
-  console.log('Good buy!!!');
+  console.log('\nGood bye!!!');
   process.exit(0);
 });

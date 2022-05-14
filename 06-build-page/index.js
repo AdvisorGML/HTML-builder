@@ -1,15 +1,15 @@
 console.clear();
 const path = require('path');
-const fsPromises = require('fs').promises;
+const fsP = require('fs').promises;
 const fs = require('fs');
 
 async function MakeIndex(from, to) {
-  let template = await fsPromises.readFile(path.join(from, 'template.html'), 'utf-8');
+  let template = await fsP.readFile(path.join(from, 'template.html'), 'utf-8');
 
   const Tegs = template.match(/{{(.*?)}}/g);
 
   for (const teg of Tegs) {
-    let component = await fsPromises.readFile(path.join(from, 'components', `${teg.slice(2, -2)}.html`), 'utf-8');
+    let component = await fsP.readFile(path.join(from, 'components', `${teg.slice(2, -2)}.html`), 'utf-8');
     template = template.replace(teg, component);
   }
   fs.writeFile(path.join(to, 'index.html'), template, (err) => {
@@ -19,11 +19,11 @@ async function MakeIndex(from, to) {
 
 async function ListCSS(dir) {
   let files = [];
-  const list = await fsPromises.readdir(dir);
+  const list = await fsP.readdir(dir);
   for (const item of list) {
     let file = path.join(dir, item);
     if (path.extname(file) === '.css') {
-      const stats = await fsPromises.stat(file);
+      const stats = await fsP.stat(file);
       if (stats.isFile()) {
         files.push(item);
       }
@@ -38,7 +38,7 @@ async function BundleCSS(from, to) {
   fs.createWriteStream(ResultCSS, 'utf-8');
 
   for (const item of await ListCSS(from)) {
-    let style = await fsPromises.readFile(path.join(from, item), 'utf-8');
+    let style = await fsP.readFile(path.join(from, item), 'utf-8');
     fs.appendFile(ResultCSS, `${style}\n`, (err) => {
       if (err) throw err;
     });
@@ -46,7 +46,7 @@ async function BundleCSS(from, to) {
 }
 
 async function ListDir(dir) {
-  const files = await fsPromises.readdir(dir, { withFileTypes: true });
+  const files = await fsP.readdir(dir, { withFileTypes: true });
   return files;
 }
 
@@ -54,7 +54,7 @@ async function EmptyDir(from) {
   const FileList = await ListDir(from);
   for (const item of FileList) {
     if (item.isFile()) {
-      fsPromises.unlink(path.join(from, item.name));
+      fsP.unlink(path.join(from, item.name));
     } else {
       await EmptyDir(path.join(from, item.name));
     }
@@ -73,11 +73,12 @@ async function RemoveDir(from) {
     }
   }
 }
+
 async function CopyDir(from, to) {
-  fsPromises.mkdir(to, { recursive: true });
+  fsP.mkdir(to, { recursive: true });
   for (const item of await ListDir(from)) {
     if (item.isFile()) {
-      fsPromises.copyFile(path.join(from, item.name), path.join(to, item.name));
+      fsP.copyFile(path.join(from, item.name), path.join(to, item.name));
     } else {
       CopyDir(path.join(from, item.name), path.join(to, item.name));
     }
@@ -91,11 +92,15 @@ async function CopyDir(from, to) {
   const AssetsDir = path.join(ProjectDir, 'assets');
   const CssDir = path.join(BaseDir, 'styles');
 
-  await fsPromises.mkdir(ProjectDir, { recursive: true });
-  await fsPromises.mkdir(AssetsDir, { recursive: true });
+  await fsP.mkdir(ProjectDir, { recursive: true });
+  await fsP.mkdir(AssetsDir, { recursive: true });
   MakeIndex(BaseDir, ProjectDir);
   BundleCSS(CssDir, ProjectDir);
-  await EmptyDir(AssetsDir);
-  await RemoveDir(AssetsDir);
+
+  await fsP.rm(AssetsDir, { recursive: true, force: true });
+
+  // await EmptyDir(AssetsDir);
+  // await RemoveDir(AssetsDir);
+
   await CopyDir(BaseAssetsDir, AssetsDir);
 })();
