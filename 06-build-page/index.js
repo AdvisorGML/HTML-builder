@@ -97,10 +97,10 @@ async function CopyDir(from, to) {
   MakeIndex(BaseDir, ProjectDir);
   BundleCSS(CssDir, ProjectDir);
 
-  await fsP.rm(AssetsDir, { recursive: true, force: true });
+  //  await fsP.rm(AssetsDir, { recursive: true, force: true });
 
-  // await EmptyDir(AssetsDir);
-  // await RemoveDir(AssetsDir);
+  await EmptyDir(AssetsDir);
+  await RemoveDir(AssetsDir);
 
   await CopyDir(BaseAssetsDir, AssetsDir);
 })();
