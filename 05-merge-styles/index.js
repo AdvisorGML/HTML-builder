@@ -26,7 +26,7 @@ async function BundleCSS(from, to) {
 
   for (const item of await listCSS(from)) {
     let ReadStream = fs.createReadStream(path.join(from, item), 'utf-8');
-    ReadStream.on('data', (chunk) => { fs.appendFile(ResultCSS, chunk, (err) => { if (err) throw err; }); });
+    ReadStream.on('data', (chunk) => { fs.appendFile(ResultCSS, `${chunk}\n`, (err) => { if (err) throw err; }); });
   }
 }
 
